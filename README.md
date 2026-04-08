@@ -1,59 +1,227 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# WebSec240100766 Codebase Guide
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This README explains what every major folder does and what each tracked source file is for, so you can confidently describe the full project architecture.
 
-## About Laravel
+## What This Project Is
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+This is a Laravel web application for a secure online product store with:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Authentication (register/login/logout)
+- Role-based access (`admin`, `employee`, `customer`)
+- Product management
+- Customer credit management
+- Purchase flow with stock and credit checks
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## High-Level Request Flow
 
-## Learning Laravel
+1. Request enters through `public/index.php`.
+2. Laravel boots from `bootstrap/app.php`.
+3. Route is matched in `routes/web.php`.
+4. Middleware (`auth`, `guest`, custom `role`) checks access.
+5. Controller handles logic and talks to models.
+6. Model reads/writes database tables.
+7. Blade view renders HTML response.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Root Files (Top Level)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- `.editorconfig`: editor formatting defaults.
+- `.env`: local environment variables and secrets.
+- `.env.example`: template of required environment variables.
+- `.gitattributes`: Git behavior rules (line endings, exports).
+- `.gitignore`: files/folders Git should not track.
+- `.phpunit.result.cache`: cached test metadata for faster reruns.
+- `artisan`: Laravel CLI entry point.
+- `composer.json`: PHP dependencies and Laravel scripts.
+- `composer.lock`: exact installed PHP dependency versions.
+- `package.json`: Node/Vite frontend dependencies and scripts.
+- `phpunit.xml`: test configuration and environment values.
+- `vite.config.js`: Vite asset build/dev-server config.
+- `README.md`: this documentation file.
 
-## Laravel Sponsors
+## `app/` - Application Code
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Holds your core business logic.
 
-### Premium Partners
+### `app/Http/Controllers/`
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+- `Controller.php`: base controller class extended by all controllers.
+- `AuthController.php`: registration/login/logout and role-based dashboard redirect.
+- `AdminUserController.php`: admin-only user CRUD (create/edit/delete admin/employee/customer).
+- `CustomerController.php`: staff customer listing, credit top-up, and customer account page.
+- `ProductController.php`: admin/employee product CRUD.
+- `PurchaseController.php`: customer store listing and purchase transaction logic.
+- `RolePermissionController.php`: admin-only static role-permission matrix page.
 
-## Contributing
+### `app/Http/Middleware/`
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- `RoleMiddleware.php`: custom middleware enforcing allowed roles per route.
 
-## Code of Conduct
+### `app/Models/`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- `User.php`: authenticatable user model with `role`, `credit`, and purchase relationship.
+- `Product.php`: product entity (`name`, `price`, `description`, `stock_quantity`).
+- `Purchase.php`: purchase entity linking user and product with quantity/price totals.
 
-## Security Vulnerabilities
+### `app/Providers/`
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- `AppServiceProvider.php`: place for app-wide service bootstrapping.
 
-## License
+## `bootstrap/` - Framework Bootstrapping
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- `app.php`: builds Laravel app, registers routes, middleware aliases, exceptions.
+- `providers.php`: list of service providers loaded by the app.
+- `cache/.gitignore`: keeps cache directory tracked but empty in Git.
+- `cache/packages.php`: cached package manifest (generated).
+- `cache/services.php`: cached service container/provider map (generated).
+
+## `config/` - Runtime Configuration
+
+- `app.php`: app name, timezone, locale, and global framework settings.
+- `auth.php`: guards/providers/password reset configuration.
+- `cache.php`: cache store and prefix settings.
+- `database.php`: DB connections and migration table settings.
+- `filesystems.php`: local/public/cloud disk configuration.
+- `logging.php`: log channels and log stack behavior.
+- `mail.php`: mail transport configuration.
+- `queue.php`: queue connections and failed-job settings.
+- `services.php`: third-party service credentials config.
+- `session.php`: session storage, lifetime, and cookie behavior.
+
+## `database/` - Data Layer Setup
+
+### Root
+
+- `.gitignore`: keeps folder in Git while excluding generated artifacts.
+
+### `database/factories/`
+
+- `UserFactory.php`: generates fake users for tests/seed data.
+
+### `database/migrations/`
+
+- `0001_01_01_000000_create_users_table.php`: creates `users`, `password_reset_tokens`, `sessions` tables.
+- `0001_01_01_000001_create_cache_table.php`: creates cache tables.
+- `0001_01_01_000002_create_jobs_table.php`: creates jobs/failed jobs tables.
+- `2026_04_01_225150_create_products_table.php`: creates `products` table.
+- `2026_04_01_225150_create_purchases_table.php`: creates `purchases` table.
+
+### `database/seeders/`
+
+- `DatabaseSeeder.php`: seeds default admin and sample customer accounts.
+
+## `public/` - Web Root
+
+- `.htaccess`: Apache rewrite rules to route requests to Laravel.
+- `index.php`: single front controller for all HTTP requests.
+- `favicon.ico`: browser tab icon.
+- `robots.txt`: crawler instructions.
+
+## `resources/` - Frontend Assets and Templates
+
+### `resources/css/`
+
+- `app.css`: main stylesheet entry.
+
+### `resources/js/`
+
+- `app.js`: JavaScript entry imported by Vite.
+- `bootstrap.js`: axios/bootstrap setup for frontend requests.
+
+### `resources/views/` (Blade Templates)
+
+- `welcome.blade.php`: public landing page.
+
+#### `resources/views/layouts/`
+
+- `app.blade.php`: shared page layout (navbar, alerts, content slot).
+
+#### `resources/views/partials/`
+
+- `head.blade.php`: reusable HTML head/opening markup (legacy partial).
+- `footer.blade.php`: reusable closing scripts/body/html markup (legacy partial).
+
+#### `resources/views/auth/`
+
+- `login.blade.php`: login form page.
+- `register.blade.php`: registration form page.
+
+#### `resources/views/admin/`
+
+- `roles_permissions.blade.php`: role-capabilities matrix view.
+
+##### `resources/views/admin/users/`
+
+- `index.blade.php`: user list for admin portal.
+- `create.blade.php`: create user page.
+- `edit.blade.php`: edit user page.
+- `form.blade.php`: reusable admin user form fields.
+
+#### `resources/views/products/`
+
+- `index.blade.php`: product list for admin/employee.
+- `create.blade.php`: create product page.
+- `edit.blade.php`: edit product page.
+- `form.blade.php`: reusable product form fields.
+
+#### `resources/views/customers/`
+
+- `index.blade.php`: customer list and add-credit form for staff.
+- `account.blade.php`: customer profile with credit and purchase history.
+
+#### `resources/views/store/`
+
+- `index.blade.php`: customer-only product catalog and buy forms.
+
+## `routes/` - Route Definitions
+
+- `web.php`: browser routes for auth, admin portal, employee portal, customer portal.
+- `console.php`: Artisan console command route definitions.
+
+## `storage/` - Runtime-Generated Files
+
+- `app/.gitignore`: keeps storage app directory structure in Git.
+- `app/private/.gitignore`: placeholder for private files.
+- `app/public/.gitignore`: placeholder for public storage files.
+- `logs/.gitignore`: keeps logs directory tracked but empty.
+- `logs/laravel.log`: application runtime logs.
+
+## `tests/` - Automated Tests
+
+- `TestCase.php`: base test class for feature/unit tests.
+
+### `tests/Feature/`
+
+- `ExampleTest.php`: default Laravel feature smoke test.
+- `AuthorizationTest.php`: validates registration role assignment and role-based access.
+- `PurchaseFlowTest.php`: validates insufficient credit and successful purchase behavior.
+
+### `tests/Unit/`
+
+- `ExampleTest.php`: default Laravel unit test example.
+
+## `vendor/` - Composer Dependencies
+
+Contains third-party packages (Laravel framework and libraries). You typically do not edit files here.
+
+## Security Design Summary
+
+- Route groups enforce `guest`, `auth`, and `role` constraints.
+- Sensitive actions use server-side validation in controllers.
+- Registration force-assigns `customer` role.
+- Purchase uses DB transaction and row locks to avoid race conditions.
+- CSRF protection is enforced on forms via Blade `@csrf` tokens.
+
+## Local Run Commands
+
+1. Install PHP dependencies: `composer install`
+2. Install JS dependencies: `npm install`
+3. Configure environment: copy `.env.example` to `.env`
+4. Generate key: `php artisan key:generate`
+5. Run migrations + seed: `php artisan migrate --seed`
+6. Start app: `php artisan serve`
+
+## Notes for Interviews / Explanations
+
+If asked "what does this codebase look like?", a good short answer is:
+
+"It is a Laravel MVC application. `routes/web.php` defines role-protected routes, controllers in `app/Http/Controllers` implement auth/store/admin logic, models in `app/Models` map DB entities, migrations in `database/migrations` define schema, and Blade templates in `resources/views` render role-specific portals."
