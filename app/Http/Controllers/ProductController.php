@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Category;
+use App\Models\Tag;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -15,7 +17,7 @@ class ProductController extends Controller
     public function index(): View
     {
         return view('products.index', [
-            'products' => Product::orderBy('name')->paginate(10),
+            'products' => Product::with(['category', 'tags'])->orderBy('name')->paginate(10),
         ]);
     }
 
@@ -24,7 +26,10 @@ class ProductController extends Controller
      */
     public function create(): View
     {
-        return view('products.create');
+        return view('products.create', [
+            'categories' => Category::orderBy('name')->get(),
+            'tags' => Tag::orderBy('name')->get(),
+        ]);
     }
 
     /**
@@ -37,9 +42,13 @@ class ProductController extends Controller
             'price' => ['required', 'numeric', 'min:0'],
             'description' => ['required', 'string'],
             'stock_quantity' => ['required', 'integer', 'min:0'],
+            'category_id' => ['nullable', 'exists:categories,id'],
+            'tags' => ['nullable', 'array'],
+            'tags.*' => ['integer', 'exists:tags,id'],
         ]);
 
-        Product::create($validated);
+        $product = Product::create($validated);
+        $product->tags()->sync($request->input('tags', []));
 
         return redirect()->route('staff.products.index')->with('status', 'Product created');
     }
@@ -57,7 +66,11 @@ class ProductController extends Controller
      */
     public function edit(Product $product): View
     {
-        return view('products.edit', ['product' => $product]);
+        return view('products.edit', [
+            'product' => $product,
+            'categories' => Category::orderBy('name')->get(),
+            'tags' => Tag::orderBy('name')->get(),
+        ]);
     }
 
     /**
@@ -70,9 +83,13 @@ class ProductController extends Controller
             'price' => ['required', 'numeric', 'min:0'],
             'description' => ['required', 'string'],
             'stock_quantity' => ['required', 'integer', 'min:0'],
+            'category_id' => ['nullable', 'exists:categories,id'],
+            'tags' => ['nullable', 'array'],
+            'tags.*' => ['integer', 'exists:tags,id'],
         ]);
 
         $product->update($validated);
+        $product->tags()->sync($request->input('tags', []));
 
         return redirect()->route('staff.products.index')->with('status', 'Product updated');
     }

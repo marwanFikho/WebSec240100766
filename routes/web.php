@@ -29,10 +29,13 @@ Route::middleware('auth')->group(function (): void {
     });
 
     Route::middleware('role:admin,employee')->group(function (): void {
-        Route::resource('staff/products', ProductController::class)->names('staff.products');
+        
         Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
         Route::patch('/customers/{user}/credit', [CustomerController::class, 'addCredit'])->name('customers.credit');
     });
+
+    // Product management: require any authenticated user to view/add products
+    Route::resource('staff/products', ProductController::class)->names('staff.products');
 
     Route::middleware('role:customer')->group(function (): void {
         Route::get('/store', [PurchaseController::class, 'index'])->name('store.index');

@@ -34,5 +34,10 @@ class DatabaseSeeder extends Seeder
                 'credit' => 200,
             ],
         );
+
+        $this->call([
+            \Database\Seeders\CategoriesTableSeeder::class,
+            \Database\Seeders\TagsTableSeeder::class,
+        ]);
     }
 }

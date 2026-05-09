@@ -10,6 +10,8 @@
     <thead>
     <tr>
         <th>Name</th>
+        <th>Category</th>
+        <th>Tags</th>
         <th>Price</th>
         <th>Description</th>
         <th>Stock</th>
@@ -20,6 +22,8 @@
     @forelse ($products as $product)
         <tr>
             <td>{{ $product->name }}</td>
+            <td>{{ $product->category?->name ?? '—' }}</td>
+            <td>{{ $product->tags->pluck('name')->join(', ') }}</td>
             <td>${{ number_format($product->price, 2) }}</td>
             <td>{{ $product->description }}</td>
             <td>{{ $product->stock_quantity }}</td>
@@ -33,7 +37,7 @@
             </td>
         </tr>
     @empty
-        <tr><td colspan="5">No products found.</td></tr>
+        <tr><td colspan="7">No products found.</td></tr>
     @endforelse
     </tbody>
 </table>
